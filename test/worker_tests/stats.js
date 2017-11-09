@@ -1,7 +1,6 @@
 "use strict";
 
 const should = require('should');
-const cluster = require('cluster');
 
 describe('Basic ConductorWorker', () => {
 
@@ -23,7 +22,7 @@ describe('Basic ConductorWorker', () => {
         });
 
         worker.processJob = function(job) {
-            //console.log('worker job: ', job);
+            // console.log(`worker ${this.workerId}, job: ${job}`);
 
             if (["job 1", "job 2", "job 8", "job 9"].indexOf(job) >= 0) {
                 worker.stats.customMetric++;
@@ -33,10 +32,10 @@ describe('Basic ConductorWorker', () => {
                 // Delay to force delay on stats on both workers
                 setTimeout(() => {
                     this.completeJob(null, job);
-                }, 250)
+                }, 300)
             } else {
                 // Just complete the job
-                this.completeJob(null, job);
+                setImmediate(() => this.completeJob(null, job));
             }
         };
 
@@ -44,7 +43,7 @@ describe('Basic ConductorWorker', () => {
             throw err;
         });
 
-        var jobsDone = 0;
+        let jobsDone = 0;
         worker.on('job_done', (job) => {
             should(job).be.a.String();
             jobsDone++;

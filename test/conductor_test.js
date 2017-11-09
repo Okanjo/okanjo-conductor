@@ -93,7 +93,7 @@ if (!cluster.isMaster) {
 
             // Generate 20 jobs
             master.generateJobs = function(callback) {
-                for(var i = 0; i < 10; i++) {
+                for(let i = 0; i < 10; i++) {
                     this.jobsQueue.push('job '+i);
                 }
                 callback();
@@ -121,7 +121,7 @@ if (!cluster.isMaster) {
                 done();
             });
 
-            var errors = 0;
+            let errors = 0;
             master.on('error', (err) => {
                 should(err.type).be.exactly('worker_crash');
                 should(err.workerId).be.a.Number();
@@ -132,7 +132,7 @@ if (!cluster.isMaster) {
 
             // Generate 10 jobs
             master.generateJobs = function(callback) {
-                for(var i = 0; i < 10; i++) {
+                for(let i = 0; i < 10; i++) {
                     this.jobsQueue.push('job '+i);
                 }
                 callback();
@@ -184,7 +184,7 @@ if (!cluster.isMaster) {
             };
 
 
-            var errors = 0;
+            let errors = 0;
             master.on('error', (err) => {
                 should(err.type).be.exactly('worker_crash');
                 should(err.workerId).be.a.Number();
@@ -195,7 +195,7 @@ if (!cluster.isMaster) {
 
             // Generate 10 jobs
             master.generateJobs = function(callback) {
-                for(var i = 0; i < 10; i++) {
+                for(let i = 0; i < 10; i++) {
                     this.jobsQueue.push('job '+i);
                 }
                 callback();
@@ -214,7 +214,7 @@ if (!cluster.isMaster) {
             master.lookups.poop = new Map();
             master.logging = false;
 
-            var statsReceived = 0;
+            let statsReceived = 0;
 
             master.on('end', () => {
                 statsReceived.should.be.exactly(2);
@@ -226,7 +226,7 @@ if (!cluster.isMaster) {
 
                 data.raw.should.be.an.Object();
                 const keys = Object.keys(data.raw);
-                //console.log(keys);
+                // console.log(keys);
                 // console.log(require('util').inspect(data, { colors: true, depth: 10}));
 
                 keys.should.have.length(2);
@@ -246,11 +246,11 @@ if (!cluster.isMaster) {
                     data.raw[keys[0]].last.should.be.an.Object();
                     data.raw[keys[1]].last.should.be.an.Object();
 
-                    data.raw[keys[0]].diff.jobsDone.should.be.greaterThan(0);
-                    data.raw[keys[1]].last.jobsDone.should.be.greaterThan(0);
+                    data.raw[keys[0]].diff.jobsDone.should.be.greaterThanOrEqual(0);
+                    data.raw[keys[1]].diff.jobsDone.should.be.greaterThanOrEqual(0);
 
-                    data.raw[keys[0]].diff.jobsDone.should.be.greaterThan(0);
-                    data.raw[keys[1]].last.jobsDone.should.be.greaterThan(0);
+                    data.raw[keys[0]].last.jobsDone.should.be.greaterThanOrEqual(0);
+                    data.raw[keys[1]].last.jobsDone.should.be.greaterThanOrEqual(0);
 
                     const totalDoneDiff1 = data.raw[keys[0]].diff.jobsDone + data.raw[keys[1]].diff.jobsDone;
                     totalDoneDiff1.should.be.exactly(5);
@@ -285,8 +285,8 @@ if (!cluster.isMaster) {
                     data.raw[keys[0]].diff.jobsDone.should.be.greaterThan(0);
                     data.raw[keys[1]].last.jobsDone.should.be.greaterThan(0);
 
-                    data.raw[keys[0]].diff.jobsDone.should.be.lessThan(data.raw[keys[0]].last.jobsDone);
-                    data.raw[keys[1]].diff.jobsDone.should.be.lessThan(data.raw[keys[1]].last.jobsDone);
+                    data.raw[keys[0]].diff.jobsDone.should.be.lessThanOrEqual(data.raw[keys[0]].last.jobsDone);
+                    data.raw[keys[1]].diff.jobsDone.should.be.lessThanOrEqual(data.raw[keys[1]].last.jobsDone);
 
                     const totalDoneDiff2 = data.raw[keys[0]].diff.jobsDone + data.raw[keys[1]].diff.jobsDone;
                     totalDoneDiff2.should.be.exactly(5);
@@ -312,7 +312,7 @@ if (!cluster.isMaster) {
 
             // Generate 10 jobs
             master.generateJobs = function(callback) {
-                for(var i = 0; i < 10; i++) {
+                for(let i = 0; i < 10; i++) {
                     this.jobsQueue.push('job '+i);
                 }
                 callback();
@@ -341,7 +341,7 @@ if (!cluster.isMaster) {
 
             // Generate 10 jobs
             master.generateJobs = function(callback) {
-                for(var i = 0; i < 10; i++) {
+                for(let i = 0; i < 10; i++) {
                     this.jobsQueue.push('job '+i);
                 }
                 callback();
@@ -390,7 +390,7 @@ if (!cluster.isMaster) {
 
             // Generate 10 jobs
             master.generateJobs = function(callback) {
-                for(var i = 0; i < 10; i++) {
+                for(let i = 0; i < 10; i++) {
                     this.jobsQueue.push('job '+i);
                 }
                 callback();
