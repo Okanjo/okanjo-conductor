@@ -33,7 +33,7 @@ describe('Basic ConductorWorker', () => {
                 // Delay to force delay on stats on both workers
                 setTimeout(() => {
                     this.completeJob(null, job);
-                }, 200)
+                }, 250)
             } else {
                 // Just complete the job
                 this.completeJob(null, job);
