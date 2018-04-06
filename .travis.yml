@@ -1,8 +1,26 @@
 language: node_js
 node_js:
-  - "lts/*"
-  - "6"
+- lts/*
+- '6'
 script:
-  - npm run report
+- npm run report
 after_script:
-  - "npm install coveralls@2.10.0 && cat ./coverage/lcov.info | ./node_modules/.bin/coveralls"
+- npm install coveralls@2.10.0 && cat ./coverage/lcov.info | ./node_modules/.bin/coveralls
+before_deploy:
+- mkdir ./deploy && cp ./README.md ./deploy
+deploy:
+  provider: s3
+  access_key_id:
+    secure: N1el7NRM3pPNmLY1puggBj4ofLXyEsaw/BElwSuGmLRl43pu32M0LJW2CFYSRbwuW1MM9AUsUPi/rstQKHz4gDvAcnmgH3prpPjm2aJpCBM70gtGLjErlrF9LBV8E/w0V3CBj2w/dzaSIezqRVyj9Rrcl+rWSCgQntRXofdJX6d/Ov8YPgM2vM+dQImVKeRowhoeFW6mm/AvAho3YKVG/W9X4+MVQ5mhQI9SUexW3H6SPHBjpTpnh6gS3MstvQ12AYSIlB0EvoVp+sv+kuPHoCys8s3DnXR5zQ1FJTv80haAqoEZpXoGOzHpIjCjKAvVwUVuF6S3Kj+WGhlEK2hixr9xpqYk9uJ8bbWIMTV3vLpWViNXg1B4Skm9H0geDafGUm/2p6372KvmzrkOu1ukoUrEMIIebucbPaqDOb6pXCi5SMq+RSdUDqYzNq+6aRGgcwBITN0JIBaoT70nSM/jBL/CdNFkcxmjjwsmENi+zabjcMTEWr+qsy0kga+zH1YQOkYJN2U+p09Ic5+qCkOSaQQ83/0sjPVzPffmteHtHElO+C28IIAOO3S5SqXDSLLcbPSwYrV5DfgFFeXqBw3OWp9x1J/55YwPJKBlbZNs+XfDItVFnncLaj8mqqSU7OVKXKOw0jBBx1+3uu0V1b3hfEs9DFfYq3boXkvDIpbv8S4=
+  secret_access_key:
+    secure: tptMNDpmS3BeBNkM90seDXZ2BJyIohmNM7cFNB79IeEj3qpa+BEnAF8jcSYsOEJO4zsrjWvuz0ZYDY5bwp6zctJG9Fqr3kfWJpxEk2GXvqZQlI4fQewc7MBz/e5jqmrWesWtv0GwdcCQHgUM8Yc1WTbFCvyV4HZrg0SA8CdFt9VIbL4FVrsbarwWea66TrdGfhbL+L5RHQJdmO4Nyac6Jw4Dtjz6AlC9wvX8BymSwMsVW37+KgkGjLALAUAgtJv9XJBj5bHbtPp7Lk1Bul9/if66ySMi+HQuiHyYgnPqXIMh3g3r6RVqOFzE2/+KX2MWsMtuATJQe4AjNFytFguJfmIE/XVP1QJGyeTqVpXPFt9sMr6ARsshL8hpKngHG7mpydXOdSeCDtk0zq4+6ejFxsOQF3JPiwX/lAp3L3FUMr3mhzqc395TUhcWPLPUw+g6qnye3N53VfvVYUh5QFju9FMI9oBkmkeL1TbmcorP2hsfAE1BqrE9u74F269jjfFyNfTt4SUdIGIjL1XZt/0SqPk4CV8NCPotD4kDB/diVtN07DUvO6eAtK0fCBAhCFJLdH5Dep4rnSksNsJnrsw9WaAxvgrN3ChfFx3WOzAIbVUmxqZr8JUV15roCY0J+t/XEkqunbSpP4+WxTE67AANuzWngqxiFC4/MwQMK35LNJ8=
+  bucket: okanjo-docs
+  skip_cleanup: true
+  upload-dir: okanjo-conductor
+  acl: public_read
+  detect_encoding: true
+  default_text_charset: utf-8
+  local_dir: deploy
+  on:
+    branch: master
+    repo: Okanjo/okanjo-conductor
