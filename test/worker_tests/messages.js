@@ -8,7 +8,7 @@ describe('Messages ConductorWorker', () => {
 
     it('should handle custom messaging in various ways', (done) => {
 
-        const worker = new ConductorWorker({ logging: false });
+        const worker = new ConductorWorker({ logging: true });
 
 
         worker.onMasterMessage = function(msg) {
