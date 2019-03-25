@@ -1,7 +1,6 @@
 "use strict";
 
 const should = require('should');
-const cluster = require('cluster');
 
 describe('Broadcast ConductorWorker', () => {
 
@@ -30,7 +29,7 @@ describe('Broadcast ConductorWorker', () => {
                 }
             }
 
-            this.fireRequestCallback(msg.callback, msg);
+            this.fireRequestCallback(msg.callback, null, msg);
         };
 
         worker.processJob = function(job) {
@@ -52,10 +51,8 @@ describe('Broadcast ConductorWorker', () => {
             throw err;
         });
 
-        var jobsDone = 0;
         worker.on('job_done', (job) => {
             should(job).be.a.String();
-            jobsDone++;
         });
 
         worker.on('completed', () => {

@@ -1,10 +1,11 @@
 "use strict";
 
 const Async = require('async');
-const Os = require('os');
+const OS = require('os');
 const Cluster = require('cluster');
 const EventEmitter = require('events').EventEmitter;
 const ShortId = require('shortid');
+const Util = require('util');
 
 /**
  * Distributes job processing across multiple processes
@@ -20,7 +21,7 @@ class Conductor extends EventEmitter {
         options = options || {};
 
         this.workerType = options.workerType || 'conductor_worker';
-        this.workerLimit = options.workerLimit || Math.min(4, Os.cpus().length);
+        this.workerLimit = options.workerLimit || Math.min(4, OS.cpus().length);
         this.jobsQueue = options.jobsQueue || [];
         this.logging = options.logging !== undefined ? options.logging : true;
         this.processing = false;
@@ -32,6 +33,10 @@ class Conductor extends EventEmitter {
         this.workerStatsReportCount = 0;
         this.id = ShortId.generate();
         this._workerIds = [];
+
+        // awaitable methods
+        this.start = Util.promisify(this.start.bind(this));
+        this.generateJobs = Util.promisify(this.generateJobs.bind(this));
     }
 
     //region Override These Methods
@@ -104,7 +109,6 @@ class Conductor extends EventEmitter {
      * Broadcasts a message to all workers.
      * @param commandName
      * @param data
-     * @param callback
      */
     broadcastMessageToWorkers(commandName, data) {
         this._workerIds.forEach((id) => {
@@ -172,7 +176,7 @@ class Conductor extends EventEmitter {
                 (next) => this.generateJobs(next),
 
                 // Start workers
-                (next) => this._startWorkers()
+                (next) => { this._startWorkers(); next(); }
 
             ], callback);
         } else {
@@ -187,7 +191,7 @@ class Conductor extends EventEmitter {
 
     /**
      * Gets the next job to process
-     * @return {T}
+     * @return {*}
      */
     _getNextJob() {
         return this.jobsQueue.shift();
@@ -197,14 +201,14 @@ class Conductor extends EventEmitter {
      * Logs to the output if logging is enabled
      */
     log() {
-        if (this.logging) console.log.apply(console, [].slice.call(arguments));
+        if (this.logging) console.log.apply(console, [].slice.call(arguments)); // eslint-disable-line no-console
     }
 
     /**
      * Logs to the output if logging is enabled
      */
     error() {
-        if (this.logging) console.error.apply(console, [].slice.call(arguments));
+        if (this.logging) console.error.apply(console, [].slice.call(arguments)); // eslint-disable-line no-console
     }
 
     /**
@@ -223,10 +227,21 @@ class Conductor extends EventEmitter {
         // Message handler
         Cluster.workers[id].on('message', (msg) => {
             if (msg && msg.cmd) {
+
+                let job;
+                let lookupName;
+                let lookupKey;
+
+                let setLookupName;
+                let setLookupKey;
+                let setLookupValue;
+
+                let stats;
+
                 switch (msg.cmd) {
                     // Get task
                     case "getJob":
-                        const job = this._getNextJob();
+                        job = this._getNextJob();
                         this.log(`> Assigned worker ${id} job:`, job);
                         this.sendMessageToWorker(id, "getJob", job, msg.callback);
                         break;
@@ -234,8 +249,8 @@ class Conductor extends EventEmitter {
                     // Check master for known value
                     case "lookup":
 
-                        const lookupName = msg.data.name;
-                        const lookupKey = msg.data.key;
+                        lookupName = msg.data.name;
+                        lookupKey = msg.data.key;
 
                         this.sendMessageToWorker(
                             id,
@@ -250,16 +265,16 @@ class Conductor extends EventEmitter {
 
                     // Set master known value
                     case "setLookup":
-                        const setLookupName = msg.data.name;
-                        const setLookupKey = msg.data.key;
-                        const setLookupValue = msg.data.value;
+                        setLookupName = msg.data.name;
+                        setLookupKey = msg.data.key;
+                        setLookupValue = msg.data.value;
 
                         this.setLookupValue(setLookupName, setLookupKey, setLookupValue);
                         this.sendMessageToWorker(id, "setLookup", null, msg.callback);
                         break;
 
                     case "stats":
-                        const stats = msg.data;
+                        stats = msg.data;
                         this._updateStatsForWorker(id, stats);
                         this.sendMessageToWorker(id, "stats", null, msg.callback);
                         break;

@@ -3,3 +3,6 @@ test
 coverage
 .nyc_output
 .idea
+docs
+.eslint*
+.travis.yml

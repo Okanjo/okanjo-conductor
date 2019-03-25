@@ -12,6 +12,16 @@ Add to your project like so:
 npm install okanjo-conductor
 ```
 
+## Breaking Changes
+
+### v2.0.0
+ * ConductorWorker – master messaging callbacks are now of signature `(err, data)` instead of `(data)`
+   * `fireRequestCallback(name, err, data)`
+   * `sendRequestToMaster(name, data, (err, data) => {...})`
+   * `getNextJob((err, job) => {...})`
+   * `lookup(name, key, (err, val) => {...})`
+   * `setLookup(name, key, value, (err) => {...})`
+
 ## Example Usage
 
 Here's a super basic, single file demonstration. 
@@ -20,6 +30,7 @@ Here's a super basic, single file demonstration.
 const Cluster = require('cluster');
 const Conductor = require('okanjo-conductor');
 const ConductorWorker = require('okanjo-conductor/ConductorWorker');
+const Util = require('util');
 
 // Check if we're a fork or not
 if (Cluster.isMaster) {
@@ -32,14 +43,14 @@ if (Cluster.isMaster) {
     });
 
     // Override job generator, or you could set it in the constructor above ^
-    conductor.generateJobs = function(callback) {
+    conductor.generateJobs = Util.promisify(function (callback) {
         for (let i = 0; i < 10; i++) {
             this.jobsQueue.push(i); // jobs are queued as numbers, but you could queue anything
         }
 
         // Finished queuing jobs.
         callback();
-    };
+    }).bind(conductor);
 
     conductor.on('error', (err) => {
         console.error('Handle your big bad errors here', err);
@@ -128,13 +139,14 @@ Creates a new conductor for managing tasks.
   * `options.workerEnv` – Contextual data passed to workers. Default is `{}`.
   * `options.lookups` – Object map to hold referential lookup data, keyed by the name of the lookup. Default is `{}`.
 
-### `conductor.generateJobs(callback)`
+### `conductor.generateJobs([callback])`
 Hook point for generating the job queue when the conductor is started. Override the method if needed.
-* `callback(err)` – Callback to fire when completed with generating the job queue. Provide an `err` if needed.
+* `callback(err)` – Optional, Callback to fire when completed with generating the job queue. Provide an `err` if needed.
+* Should return a promise
 
 For example:
 ```js
-conductor.generateJobs = function(callback) {
+conductor.generateJobs = Util.promisify(function(callback) {
     for(let i = 0; i < 10; i++) {
         this.jobsQueue.push(i); // jobs are queued as numbers
     }
@@ -144,7 +156,7 @@ conductor.generateJobs = function(callback) {
     // When finished, callback, optionally with an error param if you need to abort
     const err = null; 
     callback(err); 
-}
+}).bind(conductor);
 ``` 
  
 ### `conductor.onWorkerMessage(id, msg)`
@@ -250,9 +262,10 @@ conductor.getLookupValue("fruits", "f"); // returns "fig"
 
 ```
 
-### `conductor.start(callback)`
+### `conductor.start([callback])`
 * Starts the conductor, which will call `conductor.generateJobs()` before starting the workers.
-* `callback(err)` – Function to fire when conductor has finished processing. `err` may be set if there was a problem processing.
+* `callback(err)` – Optional, Function to fire when conductor has finished processing. `err` may be set if there was a problem processing.
+* Returns a Promise
 
 ## Events
 
@@ -346,7 +359,7 @@ worker.onMasterMessage = function(msg) {
     }
 
     // If there was a callback on this worker associated with the message, fire it
-    if (msg.callback) this.fireRequestCallback(msg.callback, msg);
+    if (msg.callback) this.fireRequestCallback(msg.callback, null, msg);
 };
 ```
 
@@ -364,32 +377,36 @@ will be issued to replace this one. Use this in the event something goes horribl
 Sends a message to the conductor. Use this to send a message to the master process / conductor.
 * `commandName` – Name of the command the master should handle
 * `data` – Message payload
-* `callback(data)` – (optional) Function to fire when the master replies to the message.
+* `callback(err, data)` – (optional) Function to fire when the master replies to the message.
+* Returns a promise
 
 ### `worker.fireRequestCallback(callbackName, data)`
 Executes a callback given the callback id. Use this when you handle custom messages in `worker.onMasterMessage(...)`.
 * `callbackName` – The id of the callback to file
 * `data` – Payload provided to the callback
 
-### `worker.lookup(name, key, callback)`
+### `worker.lookup(name, key, [callback])`
 Looks up a value given a lookup name and key on the master process conductor. This is useful when storing large 
 referential data sets in memory, so that each worker process doesn't need to duplicate the same reference set in memory.
 Only the master process conductor will store it, and each worker can reference it through process i/o.
 * `name` – String name of the lookup
 * `key` – The key name to set
-* `callback(data)` – Function to fire when conductor returned the value
+* `callback(err, data)` – (optional) Function to fire when conductor returned the value
+* Returns a promise
   
-### `worker.setLookup(name, key, value, callback)`
+### `worker.setLookup(name, key, value, [callback])`
 Sets a key-value pair in the given lookup on the master process conductor. Use this if lazy loading a referential lookup
 or if the worker can modify a the lookup data store.
 * `name` – String name of the lookup
 * `key` – The key name to set
 * `value` – The value to assign to the key
-* `callback(data)` – Function to fire when the conductor completed the operation
+* `callback(err, data)` – (optional) Function to fire when the conductor completed the operation
+* Returns a promise
 
 ### `worker.start([callback])`
 Starts the worker by listening to messages sent from the conductor, statistics monitoring, and begins processing jobs.
 * `callback(err)` – (optional) Fired when the worker has completed or failed to complete.
+* Returns a promise
  
 ### `worker.startMonitoring()`
 Starts statistics reporting if stopped. This is done automatically, but you may wish to enable/disable this as you wish.

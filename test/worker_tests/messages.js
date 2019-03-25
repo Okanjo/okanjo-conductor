@@ -1,7 +1,6 @@
 "use strict";
 
 const should = require('should');
-const cluster = require('cluster');
 
 describe('Messages ConductorWorker', () => {
 
@@ -18,15 +17,15 @@ describe('Messages ConductorWorker', () => {
 
                     case "good":
                         should(msg.data.poop).be.exactly('Yes');
-                        this.fireRequestCallback(msg.callback, msg);
+                        this.fireRequestCallback(msg.callback, null, msg);
                         return;
                 }
             }
 
-            this.fireRequestCallback(msg.callback, msg);
+            this.fireRequestCallback(msg.callback, null, msg);
         };
 
-        worker.on('stats', (data) => {
+        worker.on('stats', (/*data*/) => {
             //console.log('stats here', data);
         });
 
@@ -35,7 +34,8 @@ describe('Messages ConductorWorker', () => {
 
             if (job === "job 1") {
                 // Test custom command
-                worker.sendRequestToMaster('good', {key: 'val'}, (payload) => {
+                worker.sendRequestToMaster('good', {key: 'val'}, (err, payload) => {
+                    should(err).not.be.ok();
                     payload.workerId.should.be.a.Number();
                     payload.cmd.should.be.exactly('good');
                     payload.data.poop.should.be.exactly('Yes');
@@ -74,18 +74,18 @@ describe('Messages ConductorWorker', () => {
             }
         };
 
-        var errors = 0;
+        // let errors = 0;
         worker.on('error', (err) => {
             //console.log(err);
             should(err.job).be.exactly("job 3");
             should(err.error).match(/KABOOM/);
-            errors++;
+            // errors++;
         });
 
-        var jobsDone = 0;
+        // let jobsDone = 0;
         worker.on('job_done', (job) => {
             should(job).be.a.String();
-            jobsDone++;
+            // jobsDone++;
         });
 
         worker.on('completed', () => {

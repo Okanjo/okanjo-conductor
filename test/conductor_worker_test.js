@@ -1,6 +1,5 @@
 "use strict";
 
-const should = require('should');
 const cluster = require('cluster');
 
 if (!cluster.isMaster) {

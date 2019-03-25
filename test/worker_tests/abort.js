@@ -1,7 +1,6 @@
 "use strict";
 
 const should = require('should');
-const cluster = require('cluster');
 
 describe('Abort ConductorWorker', () => {
 
@@ -17,7 +16,7 @@ describe('Abort ConductorWorker', () => {
 
         worker.sendRequestToMaster('ready', {}, () => {});
 
-        worker.processJob = function(job) {
+        worker.processJob = function(/*job*/) {
             //console.log('worker job: ', job);
 
             // Never complete this thing
@@ -27,10 +26,10 @@ describe('Abort ConductorWorker', () => {
             throw err;
         });
 
-        var jobsDone = 0;
+        // let jobsDone = 0;
         worker.on('job_done', (job) => {
             should(job).be.a.String();
-            jobsDone++;
+            // jobsDone++;
         });
 
         worker.on('completed', () => {

@@ -1,7 +1,6 @@
 "use strict";
 
 const should = require('should');
-const cluster = require('cluster');
 
 describe('Basic ConductorWorker', () => {
 
@@ -15,7 +14,7 @@ describe('Basic ConductorWorker', () => {
 
         worker.error('text should not appear');
 
-        worker.on('stats', (data) => {
+        worker.on('stats', (/*data*/) => {
             //console.log('stats here', data);
         });
 
@@ -24,7 +23,8 @@ describe('Basic ConductorWorker', () => {
 
             if (job === "job 1") {
                 // Test custom messaging commands
-                worker.sendRequestToMaster('override-me', { key: 'val' }, (payload) => {
+                worker.sendRequestToMaster('override-me', { key: 'val' }, (err, payload) => {
+                    should(err).not.be.ok();
                     payload.workerId.should.be.a.Number();
                     payload.cmd.should.be.exactly('override-me');
                     payload.data.should.be.exactly('nope');
@@ -33,15 +33,15 @@ describe('Basic ConductorWorker', () => {
                 });
             } else if (job === "job 2") {
                 // Test lookups
-                this.lookup('poop', 'girth', (data) => {
+                this.lookup('poop', 'girth', (err, data) => {
                     data.name.should.be.exactly('poop');
                     data.key.should.be.exactly('girth');
                     should(data.value).be.exactly(undefined);
 
-                    this.setLookup('poop', 'girth', 42, (data) => {
+                    this.setLookup('poop', 'girth', 42, (err, data) => {
                         should(data).be.exactly(undefined);
 
-                        this.lookup('poop', 'girth', (data) => {
+                        this.lookup('poop', 'girth', (err, data) => {
                             data.name.should.be.exactly('poop');
                             data.key.should.be.exactly('girth');
                             data.value.should.be.exactly(42);
@@ -67,10 +67,8 @@ describe('Basic ConductorWorker', () => {
             throw err;
         });
 
-        var jobsDone = 0;
         worker.on('job_done', (job) => {
             should(job).be.a.String();
-            jobsDone++;
         });
 
         worker.on('completed', () => {

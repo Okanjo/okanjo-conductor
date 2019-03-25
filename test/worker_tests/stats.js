@@ -17,7 +17,7 @@ describe('Basic ConductorWorker', () => {
 
         worker.error('text should not appear');
 
-        worker.on('stats', (data) => {
+        worker.on('stats', (/*data*/) => {
             //console.log('stats here', data);
         });
 
@@ -43,10 +43,10 @@ describe('Basic ConductorWorker', () => {
             throw err;
         });
 
-        let jobsDone = 0;
+        // let jobsDone = 0;
         worker.on('job_done', (job) => {
             should(job).be.a.String();
-            jobsDone++;
+            // jobsDone++;
         });
 
         worker.on('completed', () => {

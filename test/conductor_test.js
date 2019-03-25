@@ -101,9 +101,11 @@ if (!cluster.isMaster) {
 
             master.isProcessing().should.be.exactly(false);
 
-            master.start();
+            master.start(() => {
 
-            master.isProcessing().should.be.exactly(true);
+                master.isProcessing().should.be.exactly(true);
+            });
+
 
         });
 
@@ -160,6 +162,11 @@ if (!cluster.isMaster) {
 
                 if (msg.cmd) {
                     switch(msg.cmd) {
+                        case "nope":
+                            should(msg.data).not.be.ok();
+                            this.sendMessageToWorker(id, "nope", { }, msg.callback);
+                            return;
+
                         case "good":
                             should(msg.data.key).be.exactly('val');
                             this.sendMessageToWorker(id, "good", { poop: "Yes" }, msg.callback);
@@ -170,11 +177,11 @@ if (!cluster.isMaster) {
                             return;
 
                         case "kaboom":
-                            console.log('time to explode');
+                            console.log('time to explode'); // eslint-disable-line no-console
                             cluster.workers[id].send({
                                 bogus: true
                             });
-                            console.log('exploded');
+                            console.log('exploded');    // eslint-disable-line no-console
                             return;
                     }
 

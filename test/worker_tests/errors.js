@@ -1,7 +1,6 @@
 "use strict";
 
 const should = require('should');
-const cluster = require('cluster');
 
 describe('Error ConductorWorker', () => {
 
@@ -11,7 +10,7 @@ describe('Error ConductorWorker', () => {
 
         const worker = new ConductorWorker({ logging: true });
 
-        worker.on('stats', (data) => {
+        worker.on('stats', (/*data*/) => {
             //console.log('stats here', data);
         });
 
@@ -20,7 +19,8 @@ describe('Error ConductorWorker', () => {
 
             if (job === "job 1") {
                 // Test unknown command
-                worker.sendRequestToMaster('unknown-cmd', { key: 'val' }, (payload) => {
+                worker.sendRequestToMaster('unknown-cmd', { key: 'val' }, (err, payload) => {
+                    should(err).not.be.ok();
                     payload.workerId.should.be.a.Number();
                     payload.cmd.should.be.exactly('unknown-cmd');
                     payload.data.error.should.match(/onWorkerMessage/);
@@ -29,7 +29,8 @@ describe('Error ConductorWorker', () => {
                 });
             } else if (job === "job 2") {
                 // Test unknown command
-                worker.sendRequestToMaster('', { key: 'val' }, (payload) => {
+                worker.sendRequestToMaster('', { key: 'val' }, (err, payload) => {
+                    should(err).not.be.ok();
                     payload.workerId.should.be.a.Number();
                     payload.cmd.should.be.exactly('error');
                     payload.data.error.should.match(/onWorkerMessage/);
@@ -45,18 +46,18 @@ describe('Error ConductorWorker', () => {
             }
         };
 
-        var errors = 0;
+        // let errors = 0;
         worker.on('error', (err) => {
             //console.log(err);
             should(err.job).be.exactly("job 3");
             should(err.error).match(/KABOOM/);
-            errors++;
+            // errors++;
         });
 
-        var jobsDone = 0;
+        // let jobsDone = 0;
         worker.on('job_done', (job) => {
             should(job).be.a.String();
-            jobsDone++;
+            // jobsDone++;
         });
 
         worker.on('completed', () => {

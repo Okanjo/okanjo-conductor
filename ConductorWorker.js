@@ -4,6 +4,7 @@ const Async = require('async');
 const Cluster = require('cluster');
 const EventEmitter = require('events').EventEmitter;
 const ShortId = require('shortid');
+const Util = require('util');
 
 /**
  * Conductor worker base class. Should be extended to be useful!
@@ -32,6 +33,14 @@ class ConductorWorker extends EventEmitter {
         // Buckets
         this._requestCallbacks = {};
         this.logging = options.logging !== undefined ? options.logging : true;
+
+        // awaitable methods
+        this.start = Util.promisify(this.start.bind(this));
+        this.bindRouter = Util.promisify(this.bindRouter.bind(this));
+        this.setLookup = Util.promisify(this.setLookup.bind(this));
+        this.lookup = Util.promisify(this.lookup.bind(this));
+        this.getNextJob = Util.promisify(this.getNextJob.bind(this));
+        this.sendRequestToMaster = Util.promisify(this.sendRequestToMaster.bind(this));
     }
 
     //region Override These Methods
@@ -62,7 +71,7 @@ class ConductorWorker extends EventEmitter {
 
                 case "override-me":
                     this.log('got dummy message back');
-                    this.fireRequestCallback(msg.callback, msg);
+                    this.fireRequestCallback(msg.callback, null, msg);
                     return;
             }
         }
@@ -71,7 +80,7 @@ class ConductorWorker extends EventEmitter {
         this.error('Unknown message from master! workerid:', this.workerId, msg);
 
         /* istanbul ignore else: would cause a hang with no callback */
-        if (msg.callback) this.fireRequestCallback(msg.callback, msg);
+        if (msg.callback) this.fireRequestCallback(msg.callback, null, msg);
     }
 
     //endregion
@@ -115,7 +124,7 @@ class ConductorWorker extends EventEmitter {
      * @param err
      */
     crash(err) {
-        console.error('> !! Got error in processing job, workerId: ', this.workerId, err);
+        this.error('> !! Got error in processing job, workerId: ', this.workerId, err);
         this.stopMonitoring();
         this.rollStats();
         process.exit(4);
@@ -140,14 +149,14 @@ class ConductorWorker extends EventEmitter {
      * Logs to the output if logging is enabled
      */
     log() {
-        if (this.logging) console.log.apply(console, [].slice.call(arguments));
+        if (this.logging) console.log.apply(console, [].slice.call(arguments)); // eslint-disable-line no-console
     }
 
     /**
      * Logs to the output if logging is enabled
      */
     error() {
-        if (this.logging) console.error.apply(console, [].slice.call(arguments));
+        if (this.logging) console.error.apply(console, [].slice.call(arguments)); // eslint-disable-line no-console
     }
 
     /**
@@ -218,7 +227,7 @@ class ConductorWorker extends EventEmitter {
         // Process the job
         this.processJob(job);
 
-        this.fireRequestCallback(msg.callback, job);
+        this.fireRequestCallback(msg.callback, null, job);
     }
 
     /**
@@ -230,7 +239,7 @@ class ConductorWorker extends EventEmitter {
         const keyMapKey = msg.data.key;
         const keyMapValue = msg.data.value;
         const callbackName = msg.callback;
-        this.fireRequestCallback(callbackName, { name: keyMapName, key: keyMapKey, value: keyMapValue });
+        this.fireRequestCallback(callbackName, null, { name: keyMapName, key: keyMapKey, value: keyMapValue });
     }
 
     /**
@@ -245,11 +254,12 @@ class ConductorWorker extends EventEmitter {
     /**
      * Fires a callback, if it's present
      * @param callbackName
+     * @param err
      * @param data
      */
-    fireRequestCallback(callbackName, data) {
+    fireRequestCallback(callbackName, err, data) {
         if (typeof this._requestCallbacks[callbackName] === "function") {
-            this._requestCallbacks[callbackName](data);
+            this._requestCallbacks[callbackName](err, data);
             delete this._requestCallbacks[callbackName];
         } else if (this._requestCallbacks[callbackName] === null) {
             // No callback, ignore
