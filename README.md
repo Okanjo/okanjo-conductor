@@ -1,6 +1,6 @@
 # Okanjo Conductor
 
-[![Build Status](https://travis-ci.org/Okanjo/okanjo-conductor.svg?branch=master)](https://travis-ci.org/Okanjo/okanjo-conductor) [![Coverage Status](https://coveralls.io/repos/github/Okanjo/okanjo-conductor/badge.svg?branch=master)](https://coveralls.io/github/Okanjo/okanjo-conductor?branch=master)
+[![Node.js CI](https://github.com/Okanjo/okanjo-conductor/actions/workflows/node.js.yml/badge.svg)](https://github.com/Okanjo/okanjo-conductor/actions/workflows/node.js.yml) [![Coverage Status](https://coveralls.io/repos/github/Okanjo/okanjo-conductor/badge.svg?branch=master)](https://coveralls.io/github/Okanjo/okanjo-conductor?branch=master)
 
 Module for handing batch jobs across multiple worker processes via Cluster.
 
@@ -13,6 +13,10 @@ npm install okanjo-conductor
 ```
 
 ## Breaking Changes
+
+### v3.0.0
+ * Updated dependencies to latest
+ * Supports Node v16
 
 ### v2.0.0
  * ConductorWorker – master messaging callbacks are now of signature `(err, data)` instead of `(data)`

@@ -1,6 +1,6 @@
 {
   "name": "okanjo-conductor",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "System for processing batch jobs across workers.",
   "main": "Conductor.js",
   "scripts": {
@@ -28,20 +28,73 @@
   "author": "Okanjo Partners Inc",
   "license": "MIT",
   "devDependencies": {
-    "eslint": "^5.15.3",
-    "mocha": "^6.0.2",
-    "nyc": "^13.3.0",
+    "eslint": "^8.11.0",
+    "mocha": "^9.2.2",
+    "nyc": "^15.1.0",
     "should": "^13.2.3"
   },
   "dependencies": {
-    "async": "^2.6.2",
-    "shortid": "^2.2.14"
+    "async": "^3.2.3",
+    "shortid": "^2.2.16"
+  },
+  "mocha": {
+    "require": ["should"],
+    "reporter": "spec",
+    "checkLeaks": true,
+    "timeout": 5000
   },
   "nyc": {
     "reporter": [
       "text-summary",
       "html",
       "lcovonly"
+    ]
+  },
+  "eslintConfig": {
+    "ignorePatterns": [
+      "/node_modules/**",
+      "/coverage/**",
+      "/.nyc_output/**"
+    ],
+    "env": {
+      "es6": true,
+      "node": true
+    },
+    "parserOptions": {
+      "ecmaVersion": 2018,
+      "sourceType": "module"
+    },
+    "plugins": [],
+    "extends": "eslint:recommended",
+    "globals": {
+      "require": true,
+      "module": true,
+      "describe": true,
+      "it": true,
+      "before": true,
+      "after": true,
+      "afterEach": true,
+      "Promise": true
+    },
+    "overrides": [
+      {
+        "files": [
+          "docs/**"
+        ],
+        "rules": {
+          "no-console": "off",
+          "no-unused-vars": "off"
+        }
+      },
+      {
+        "files": [
+          "test/*.js"
+        ],
+        "parserOptions": {
+          "sourceType": "script",
+          "no-console": "off"
+        }
+      }
     ]
   }
 }
